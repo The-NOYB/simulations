@@ -1,100 +1,98 @@
-import random
 import pygame as pg
-import sys
+import random, sys, math
+from block import Block
 
 pg.init()
 window = pg.display.set_mode((900,900))
-pg.display.set_caption("Test client")
 clock = pg.time.Clock()
 
 path = []
-visited = []    # you could make isivisited a property of the class so that there is no need to look for cell in a list
+visited = []
 maze = []
-leng = 30    # 3x3 grid for now
+leng = 10    # 3x3 grid for now
 
+# special color for the visited block
 visited_surf = pg.Surface( (30,30) )
 visited_surf.fill( (100, 50, 100) )
 
-# just the calling function
-def solve ( maze, block, path, visited ):
-    visited.append(block)
-
-    algorithm(maze, block, path, visited)
-
 # the backtracking algorithm
-def algorithm( maze, block, path, visited ):
+def algorithm( maze, block, path, visited, feedback):
 
+    visited.append( block.index )
     # left, right, up, down
-    choices = [-1,1,-leng,leng]
+    choices = [-1, 1, -leng, leng]
     removal_list = []
 
     # remove the directions which connect to visited nodes or are not connected 
-    for i in choices:
-        if ( block + i < 0 or block + i >= leng: )
-            removal_list.append(i)
-        elif ( (block + i) in visited ):
-            removal_list.append(i)
+    for choice in choices:
+        # edge cases
+        if (choice == 1 and block.position[1] == leng-1):
+            removal_list.append(choice)
+        elif (choice == -1 and block.position[1] == 0):
+            removal_list.append(choice)
+        elif (choice == -leng and block.position[0] == 0):
+            removal_list.append(choice)
+        elif (choice == leng and block.position[0] == leng-1):
+            removal_list.append(choice)
+        # if the node is visited
+        elif ((block.index + choice) in visited):
+            removal_list.append(choice)
+        elif ( choice == feedback):
+            removal_list.append(choice)
 
     for i in removal_list:
         choices.remove(i)
 
-    direction_choosen = block + random.choice( choices )
+    # getting the wrong block
+    if not choices:
+        last_block = visited.pop()
+        feedback = last_block - visited[-1]
+        return maze[ visited[-1] ], feedback
 
+    direction_choosen = random.choice(choices)
+    print( f"{direction_choosen = }, {block.index = }" )
+    block_choosen = maze[block.index + direction_choosen]
 
-class Block():
-    def __init__(self, index, left=False, right=False, up=False, down=False):
-        self.isstart = False
-        self.left = left
-        self.right = right
-        self.up = up
-        self.down = down
-        self.isend = False
-        self.position = [ index%leng, index//leng ]
-        self.rect = pg.Rect(0,0,30,30)
-        self.surf = pg.Surface( (30,30) )
-        self.surf.fill( (0,0,0) )
+    if direction_choosen == 1:
+        block.right = True
+        block_choosen.left = True
+    elif direction_choosen == -1:
+        block.left = True
+        block_choosen.right = True
+    elif direction_choosen == -leng:
+        block.up = True
+        block_choosen.down = True
+    else:
+        block.down = True
+        block_choosen.up = True
 
-    def make_img(self):
-        # assigning the correct coords to each nodes change 3 according to sidexside maze
-        self.rect.x = self.position[0] * 30
-        self.rect.y = self.position[1] * 30
-        
-        # drawing walls for each node as white lines
-        if not self.left:
-            pg.draw.line( self.surf,(255,255,255),(0,0), (0,29))
-        if not self.right and not self.isend:
-            pg.draw.line( self.surf,(255,255,255),(29,0), (29,29))
-        if not self.up:
-            pg.draw.line( self.surf,(255,255,255),(0,0), (29,0))
-        if not self.down:
-            pg.draw.line( self.surf,(255,255,255),(0,29), (29,29))
-
-        if self.isend:   # if end node then color it red
-            pg.draw.circle( self.surf, (255,0,0), (14,14), 4)
-        elif self.isstart:   # if start node then color it red
-            pg.draw.circle( self.surf, (0,0,255), (14,14), 4)
-        else:   # color it green
-            pg.draw.circle( self.surf, (0,255,0), (14,14), 3)
+    return block_choosen, feedback
 
 # making a grid
-for index in range(900):
-    block = Block( index )
-    block.make_img()
-    maze.append( block )
+maze = [ Block(index, leng) for index in range(leng**2) ]
 
 # making a random block the start
-choice = random.choice( maze )
-choice.isstart = True
+startBlock = maze[ random.randrange(leng**2) ]
+startBlock.isStart = True
+
+current_block = startBlock
+feedback = 0
+
+for i in range( leng**2 ):
+    maze[i].make_img()
 
 while True:
     window.fill( (100,100,100) )
+
+    current_block, feedback = algorithm(maze, current_block, path, visited, feedback)
 
 #    # drawing the maze
     for block in  maze:
         window.blit( block.surf, block.rect.topleft)
     
     for visited_block in visited:
-        window.blit( visited_surf, maze[visited_block].rect.topleft )
+        _pos = block.rect.width * maze[visited_block].position[0], block.rect.width * maze[visited_block].position[1]
+        window.blit( visited_surf, _pos )
 
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -102,4 +100,4 @@ while True:
             sys.exit()
 
     pg.display.update()
-    clock.tick(60)
+    clock.tick(5)
