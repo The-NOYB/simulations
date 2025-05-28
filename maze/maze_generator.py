@@ -7,7 +7,6 @@ window = pg.display.set_mode((900,900))
 clock = pg.time.Clock()
 
 path = []
-visited = []
 maze = []
 leng = 10    # 3x3 grid for now
 
@@ -16,9 +15,13 @@ visited_surf = pg.Surface( (30,30) )
 visited_surf.fill( (100, 50, 100) )
 
 # the backtracking algorithm
-def algorithm( maze, block, path, visited, feedback):
+def algorithm( maze, path ):
 
-    visited.append( block.index )
+    if not path:
+        return None
+
+    block = path.pop()
+    block.visited = True
     # left, right, up, down
     choices = [-1, 1, -leng, leng]
     removal_list = []
@@ -35,23 +38,27 @@ def algorithm( maze, block, path, visited, feedback):
         elif (choice == leng and block.position[0] == leng-1):
             removal_list.append(choice)
         # if the node is visited
-        elif ((block.index + choice) in visited):
+        elif maze[block.index + choice].visited :
             removal_list.append(choice)
-        elif ( choice == feedback):
-            removal_list.append(choice)
+#        elif ( choice == feedback):
+#            removal_list.append(choice)
 
     for i in removal_list:
         choices.remove(i)
 
     # getting the wrong block
-    if not choices:
-        last_block = visited.pop()
-        feedback = last_block - visited[-1]
-        return maze[ visited[-1] ], feedback
+    if not choices and not path:
+        block.isEnd = True
+        print("{block.index}")
+        return None
+    elif not choices:
+        block_choosen = path.pop()
+        return block_choosen
 
+    path.append(block)
     direction_choosen = random.choice(choices)
-    print( f"{direction_choosen = }, {block.index = }" )
     block_choosen = maze[block.index + direction_choosen]
+    block_choosen.visited = True
 
     if direction_choosen == 1:
         block.right = True
@@ -66,33 +73,44 @@ def algorithm( maze, block, path, visited, feedback):
         block.down = True
         block_choosen.up = True
 
-    return block_choosen, feedback
+    path.append(block_choosen)
+    print(len(path))
+    return block_choosen
 
-# making a grid
-maze = [ Block(index, leng) for index in range(leng**2) ]
+def init_maze():
+    global maze, path
+    # making a grid
+    maze = [ Block(index, leng) for index in range(leng**2) ]
+    
+    # making a random block the start
+    startBlock = maze[ random.randrange(leng**2) ]
+    startBlock.isStart = True
+    path.append(startBlock)
 
-# making a random block the start
-startBlock = maze[ random.randrange(leng**2) ]
-startBlock.isStart = True
-
-current_block = startBlock
-feedback = 0
-
-for i in range( leng**2 ):
-    maze[i].make_img()
+init_maze()
+current_block = path[-1]
 
 while True:
     window.fill( (100,100,100) )
 
-    current_block, feedback = algorithm(maze, current_block, path, visited, feedback)
+    if not current_block:
+        pg.time.wait(10000)
+        init_maze()
+    current_block = algorithm(maze, path)
 
 #    # drawing the maze
-    for block in  maze:
-        window.blit( block.surf, block.rect.topleft)
+    for block in maze:
+#        if block.visited:
+        if block == current_block:
+            _pos = block.rect.width * block.position[0], block.rect.width * block.position[1]
+            window.blit( visited_surf, _pos )
+        else:
+            block.make_img()
+            window.blit( block.surf, block.rect.topleft)
     
-    for visited_block in visited:
-        _pos = block.rect.width * maze[visited_block].position[0], block.rect.width * maze[visited_block].position[1]
-        window.blit( visited_surf, _pos )
+#    for visited_block in visited:
+#        _pos = block.rect.width * maze[visited_block].position[0], block.rect.width * maze[visited_block].position[1]
+#        window.blit( visited_surf, _pos )
 
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -100,4 +118,4 @@ while True:
             sys.exit()
 
     pg.display.update()
-    clock.tick(5)
+    clock.tick(10)
