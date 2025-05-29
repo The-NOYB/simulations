@@ -8,14 +8,14 @@ clock = pg.time.Clock()
 
 path = []
 maze = []
-leng = 10    # 3x3 grid for now
+leng = 30    # 3x3 grid for now
 
 # special color for the visited block
 visited_surf = pg.Surface( (30,30) )
 visited_surf.fill( (100, 50, 100) )
 
 # the backtracking algorithm
-def algorithm( maze, path ):
+def gen_algorithm( maze, path ):
 
     if not path:
         return None
@@ -23,6 +23,7 @@ def algorithm( maze, path ):
     block = path.pop()
     block.visited = True
     # left, right, up, down
+    # wtf it is up, down, left, right, no idea bruh
     choices = [-1, 1, -leng, leng]
     removal_list = []
 
@@ -49,7 +50,8 @@ def algorithm( maze, path ):
     # getting the wrong block
     if not choices and not path:
         block.isEnd = True
-        print("{block.index}")
+        block.make_img()
+        print(f"{block.index}")
         return None
     elif not choices:
         block_choosen = path.pop()
@@ -61,20 +63,26 @@ def algorithm( maze, path ):
     block_choosen.visited = True
 
     if direction_choosen == 1:
-        block.right = True
-        block_choosen.left = True
-    elif direction_choosen == -1:
-        block.left = True
-        block_choosen.right = True
-    elif direction_choosen == -leng:
-        block.up = True
-        block_choosen.down = True
-    else:
         block.down = True
         block_choosen.up = True
+#        print("down")
+    elif direction_choosen == -1:
+        block.up = True
+        block_choosen.down = True
+#        print("up")
+    elif direction_choosen == -leng:
+        block.left = True
+        block_choosen.right = True
+#        print("left")
+    else:
+        block.right = True
+        block_choosen.left = True
+#        print("right")
+
+    block.make_img()
+    block_choosen.make_img()
 
     path.append(block_choosen)
-    print(len(path))
     return block_choosen
 
 def init_maze():
@@ -82,8 +90,11 @@ def init_maze():
     # making a grid
     maze = [ Block(index, leng) for index in range(leng**2) ]
     
-    # making a random block the start
-    startBlock = maze[ random.randrange(leng**2) ]
+    # the custom start, end and step is for starting being in border only
+    start, end, step = random.choice( [ (0, leng, 1), (0, leng**2, leng), (leng-1, leng**2, leng), ((leng-1)*leng, leng**2, 1)]  )
+
+    # making the random border block the startBlock
+    startBlock = maze[ random.randrange( start, end, step ) ]
     startBlock.isStart = True
     path.append(startBlock)
 
@@ -94,9 +105,9 @@ while True:
     window.fill( (100,100,100) )
 
     if not current_block:
-        pg.time.wait(10000)
+#        pg.time.wait(500)
         init_maze()
-    current_block = algorithm(maze, path)
+    current_block = gen_algorithm(maze, path)
 
 #    # drawing the maze
     for block in maze:
@@ -105,7 +116,6 @@ while True:
             _pos = block.rect.width * block.position[0], block.rect.width * block.position[1]
             window.blit( visited_surf, _pos )
         else:
-            block.make_img()
             window.blit( block.surf, block.rect.topleft)
     
 #    for visited_block in visited:
@@ -118,4 +128,4 @@ while True:
             sys.exit()
 
     pg.display.update()
-    clock.tick(10)
+    clock.tick(0)
