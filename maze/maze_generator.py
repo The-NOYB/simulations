@@ -8,7 +8,7 @@ clock = pg.time.Clock()
 
 path = []
 maze = []
-leng = 30    # 3x3 grid for now
+leng = 10    # 3x3 grid for now
 
 # special color for the visited block
 visited_surf = pg.Surface( (30,30) )
@@ -22,6 +22,7 @@ def gen_algorithm( maze, path ):
 
     block = path.pop()
     block.visited = True
+
     # left, right, up, down
     # wtf it is up, down, left, right, no idea bruh
     choices = [-1, 1, -leng, leng]
@@ -51,11 +52,10 @@ def gen_algorithm( maze, path ):
     if not choices and not path:
         block.isEnd = True
         block.make_img()
-        print(f"{block.index}")
+        print(f"{block.index, block.isStart, block.isEnd}")
         return None
     elif not choices:
-        block_choosen = path.pop()
-        return block_choosen
+        return block
 
     path.append(block)
     direction_choosen = random.choice(choices)
@@ -102,10 +102,10 @@ init_maze()
 current_block = path[-1]
 
 while True:
-    window.fill( (100,100,100) )
+    window.fill( (0,100,100) )
 
     if not current_block:
-#        pg.time.wait(500)
+        pg.time.wait(5000)
         init_maze()
     current_block = gen_algorithm(maze, path)
 
@@ -128,4 +128,4 @@ while True:
             sys.exit()
 
     pg.display.update()
-    clock.tick(0)
+    clock.tick(4)
