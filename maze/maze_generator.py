@@ -8,7 +8,7 @@ clock = pg.time.Clock()
 
 path = []
 maze = []
-leng = 10    # 3x3 grid for now
+leng = 30    # 3x3 grid for now
 
 # special color for the visited block
 visited_surf = pg.Surface( (30,30) )
@@ -42,8 +42,6 @@ def gen_algorithm( maze, path ):
         # if the node is visited
         elif maze[block.index + choice].visited :
             removal_list.append(choice)
-#        elif ( choice == feedback):
-#            removal_list.append(choice)
 
     for i in removal_list:
         choices.remove(i)
@@ -128,4 +126,4 @@ while True:
             sys.exit()
 
     pg.display.update()
-    clock.tick(4)
+    clock.tick(0)

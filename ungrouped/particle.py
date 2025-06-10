@@ -24,25 +24,18 @@ class Particle(pg.sprite.Sprite):
          screen.blit( self.image, (self.x, self.y) )
         
     def update(self):
-        if self.collided:
-            self.vector.x *= -1
-            self.vector.y *= -1
-            self.rect.x += self.vector.x
-            self.rect.y += self.vector.y
-            self.colided = False
+        dx = self.rect.x + self.vector.x
+        dy = self.rect.y + self.vector.y
+
+        if (dx > 0 and (dx + self.leng) < 800):
+            self.rect.x = dx
         else:
-            dx = self.rect.x + self.vector.x
-            dy = self.rect.y + self.vector.y
-    
-            if (dx > 0 and (dx + self.leng) < 800):
-                self.rect.x = dx
-            else:
-                self.vector.x *= -1
-    
-            if (dy > 0 and (dy + self.leng) < 600):
-                self.rect.y = dy
-            else:
-                self.vector.y *= -1
+            self.vector.x *= -1
+
+        if (dy > 0 and (dy + self.leng) < 600):
+            self.rect.y = dy
+        else:
+            self.vector.y *= -1
 
     def make_img(self):
         if self.type == "circle":
@@ -60,4 +53,3 @@ class Particle(pg.sprite.Sprite):
             pg.draw.polygon( self.image, (158, 200, 50), [ (0, self.leng), (self.leng, self.leng), (self.leng//2, 0) ] )
             self.image.set_colorkey( (0,0,0) )
             self.rect = self.image.get_rect()
-

@@ -24,7 +24,7 @@ def solve ( maze, block, path, visited ):
 # the backtracking algorithm
 def solve_algorithm( maze, block, path, visited ):
 
-    if maze[block].isend:
+    if maze[block].isEnd:
         return 
 
     # left, right, up, down
@@ -51,17 +51,28 @@ def solve_algorithm( maze, block, path, visited ):
         direction_choosen = choices[-1]  # choose the last option present in choice
         path.append( block + direction_choosen )
         visited.append( block + direction_choosen )
-        algorithm( maze, block + direction_choosen, path, visited )
+        solve_algorithm( maze, block + direction_choosen, path, visited )
     else:
         path.pop()  # remove the current node
-        algorithm( maze, path[-1], path, visited )  # go to the last node in path
+        solve_algorithm( maze, path[-1], path, visited )  # go to the last node in path
 
-# just calling the image functions
-for index in range(len(maze)):
-    maze[index].make_img(index, leng)
+maze = [ Block(index, leng) for index in range(leng**2) ]
 
-solve(maze, 8, path, visited )
-print(path)
+maze[0].isStart = True
+maze[633].isEnd = True
+
+result = maze[0]
+
+#while result:
+#    result = gen_algorithm( maze, path)
+
+for block in maze:
+    if block.isStart:
+        startBlock = block.index
+    block.make_img()
+
+solve(maze, startBlock, path, visited)
+print("what")
 
 while True:
     window.fill( (100,100,100) )
